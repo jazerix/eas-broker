@@ -25,12 +25,23 @@ async function main() {
   });
 
   client.on("connect", function () {
-    client.subscribe("devices/+/sample", function (err) {});
+    client.subscribe("devices/+/sample", function (err) {
+      console.log(`Subscribed to topic devices/+/sample`);
+    });
   });
 
   client.on("message", function (topic, message) {
     let deviceName: string = topic
       .toString()
       .match(/devices\/([a-zA-Z\-0-9]*)\/sample/)[1];
+    let sample = JSON.parse(message.toString());
+    collection.insertOne({
+      sampled_at: new Date(sample.time),
+      device: deviceName,
+      collected_at: new Date(),
+      data: sample.data,
+    });
   });
 }
+
+main();
