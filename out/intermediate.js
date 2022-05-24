@@ -101,7 +101,7 @@ function main() {
                                 return;
                             }
                             var samplesReceived = msg.samples;
-                            var sentAt = new Date(msg.sent_at);
+                            var sentAt = new Date(msg.sent_at * 1000);
                             var receivedAt = new Date();
                             receivedAt.setMilliseconds(0);
                             var delay = Math.abs((receivedAt.getTime() - sentAt.getTime()) / 1000);
@@ -110,7 +110,7 @@ function main() {
                                 var sum = sample.data.reduce(function (a, b) { return a + b; }, 0);
                                 return {
                                     data: sample.data,
-                                    sampled_at: new Date(sample.time),
+                                    sampled_at: new Date(sample.time * 1000),
                                     device: deviceName_1,
                                     db: Math.abs(((sum / sample.data.length) % 100) + 20)
                                 };

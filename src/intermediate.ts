@@ -70,7 +70,7 @@ async function main() {
       }
 
       const samplesReceived = msg.samples;
-      const sentAt = new Date(msg.sent_at);
+      const sentAt = new Date(msg.sent_at * 1000);
       const receivedAt = new Date();
       receivedAt.setMilliseconds(0);
       let delay = Math.abs((receivedAt.getTime() - sentAt.getTime()) / 1000);
@@ -83,7 +83,7 @@ async function main() {
         let sum = sample.data.reduce((a: number, b: number) => a + b, 0);
         return {
           data: sample.data,
-          sampled_at: new Date(sample.time),
+          sampled_at: new Date(sample.time * 1000),
           device: deviceName,
           db: Math.abs(((sum / sample.data.length) % 100) + 20),
         };
