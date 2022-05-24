@@ -105,12 +105,12 @@ function main() {
                             var receivedAt = new Date();
                             receivedAt.setMilliseconds(0);
                             var delay = Math.abs((receivedAt.getTime() - sentAt.getTime()) / 1000);
-                            console.log("Received ".concat(samplesReceived.length, " samples."));
+                            console.log("Received ".concat(samplesReceived.length, " samples from \"").concat(deviceName_1, "\"."));
                             var mappedSampled = samplesReceived.map(function (sample) {
                                 var sum = sample.data.reduce(function (a, b) { return a + b; }, 0);
                                 return {
                                     data: sample.data,
-                                    sampled_at: new Date(sample.sampled_at),
+                                    sampled_at: new Date(sample.time),
                                     device: deviceName_1,
                                     db: Math.abs(((sum / sample.data.length) % 100) + 20)
                                 };
@@ -128,7 +128,7 @@ function main() {
                             });
                         }
                         catch (e) {
-                            console.log("unalbe to interpret message");
+                            console.log("unable to interpret message");
                         }
                     });
                     return [2 /*return*/];

@@ -75,13 +75,15 @@ async function main() {
       receivedAt.setMilliseconds(0);
       let delay = Math.abs((receivedAt.getTime() - sentAt.getTime()) / 1000);
 
-      console.log(`Received ${samplesReceived.length} samples.`);
+      console.log(
+        `Received ${samplesReceived.length} samples from "${deviceName}".`
+      );
 
       let mappedSampled = samplesReceived.map((sample) => {
         let sum = sample.data.reduce((a: number, b: number) => a + b, 0);
         return {
           data: sample.data,
-          sampled_at: new Date(sample.sampled_at),
+          sampled_at: new Date(sample.time),
           device: deviceName,
           db: Math.abs(((sum / sample.data.length) % 100) + 20),
         };
@@ -103,7 +105,7 @@ async function main() {
         }
       );
     } catch (e) {
-      console.log("unalbe to interpret message");
+      console.log("unable to interpret message");
     }
   });
 }
