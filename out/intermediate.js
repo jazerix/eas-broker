@@ -44,7 +44,7 @@ var mongoClient = new mongodb_1.MongoClient(url);
 var dbName = "eas";
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, client;
+        var db, samples, devices, client;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, mongoClient.connect()];
@@ -52,7 +52,8 @@ function main() {
                     _a.sent();
                     console.log("Connected successfully to database");
                     db = mongoClient.db(dbName);
-                    collection = db.collection("samples");
+                    samples = db.collection("samples");
+                    devices = db.collection("devices");
                     client = mqtt.connect({
                         servers: [
                             {
@@ -67,18 +68,68 @@ function main() {
                         client.subscribe("devices/+/sample", function (err) {
                             console.log("Subscribed to topic devices/+/sample");
                         });
+                        client.subscribe("devices/+/presence", function (err) {
+                            console.log("Subscribed to topic devices/+/presence");
+                        });
                     });
                     client.on("message", function (topic, message) {
-                        var deviceName = topic
-                            .toString()
-                            .match(/devices\/([a-zA-Z\-0-9]*)\/sample/)[1];
-                        var sample = JSON.parse(message.toString());
-                        collection.insertOne({
-                            sampled_at: new Date(sample.time),
-                            device: deviceName,
-                            collected_at: new Date(),
-                            data: sample.data
-                        });
+                        try {
+                            var _a = topic
+                                .toString()
+                                .match(/devices\/([a-zA-Z\-0-9]*)\/(sample|presence)/), topicFull = _a[0], deviceName_1 = _a[1], type = _a[2];
+                            var msg = JSON.parse(message.toString());
+                            if (type === "presence") {
+                                devices.updateOne({
+                                    name: deviceName_1
+                                }, {
+                                    $set: {
+                                        location: {
+                                            lat: msg.lat,
+                                            lng: msg.lng
+                                        }
+                                    },
+                                    $setOnInsert: {
+                                        created_at: new Date(),
+                                        ping: {
+                                            latency: null,
+                                            last: new Date()
+                                        }
+                                    }
+                                }, {
+                                    upsert: true
+                                });
+                                return;
+                            }
+                            var samplesReceived = msg.samples;
+                            var sentAt = new Date(msg.sent_at);
+                            var receivedAt = new Date();
+                            receivedAt.setMilliseconds(0);
+                            var delay = Math.abs((receivedAt.getTime() - sentAt.getTime()) / 1000);
+                            console.log("Received ".concat(samplesReceived.length, " samples."));
+                            var mappedSampled = samplesReceived.map(function (sample) {
+                                var sum = sample.data.reduce(function (a, b) { return a + b; }, 0);
+                                return {
+                                    data: sample.data,
+                                    sampled_at: new Date(sample.sampled_at),
+                                    device: deviceName_1,
+                                    db: Math.abs(((sum / sample.data.length) % 100) + 20)
+                                };
+                            });
+                            samples.insertMany(mappedSampled);
+                            devices.updateOne({
+                                name: deviceName_1
+                            }, {
+                                $set: {
+                                    ping: {
+                                        latency: delay,
+                                        last: receivedAt
+                                    }
+                                }
+                            });
+                        }
+                        catch (e) {
+                            console.log("unalbe to interpret message");
+                        }
                     });
                     return [2 /*return*/];
             }
