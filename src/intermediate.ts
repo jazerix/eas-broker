@@ -69,15 +69,10 @@ async function main() {
         return;
       }
 
-      const samplesReceived = msg.samples;
       const sentAt = new Date(msg.sent_at * 1000);
       const receivedAt = new Date();
       receivedAt.setMilliseconds(0);
       let delay = Math.abs((receivedAt.getTime() - sentAt.getTime()) / 1000);
-
-      console.log(
-        `Received ${samplesReceived.length} samples from "${deviceName}".`
-      );
 
       samples.insertOne({
         data: msg.data,
