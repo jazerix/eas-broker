@@ -95,7 +95,7 @@ async function main() {
         }
       );
     } catch (e) {
-      console.log("unable to interpret message");
+      console.log("unable to interpret message, " + e);
     }
   });
 }
