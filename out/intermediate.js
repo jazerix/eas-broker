@@ -76,11 +76,11 @@ function main() {
                         try {
                             var _a = topic
                                 .toString()
-                                .match(/devices\/([a-zA-Z\-0-9]*)\/(sample|presence)/), topicFull = _a[0], deviceName_1 = _a[1], type = _a[2];
+                                .match(/devices\/([a-zA-Z\-0-9]*)\/(sample|presence)/), topicFull = _a[0], deviceName = _a[1], type = _a[2];
                             var msg = JSON.parse(message.toString());
                             if (type === "presence") {
                                 devices.updateOne({
-                                    name: deviceName_1
+                                    name: deviceName
                                 }, {
                                     $set: {
                                         location: {
@@ -100,24 +100,18 @@ function main() {
                                 });
                                 return;
                             }
-                            var samplesReceived = msg.samples;
                             var sentAt = new Date(msg.sent_at * 1000);
                             var receivedAt = new Date();
                             receivedAt.setMilliseconds(0);
                             var delay = Math.abs((receivedAt.getTime() - sentAt.getTime()) / 1000);
-                            console.log("Received ".concat(samplesReceived.length, " samples from \"").concat(deviceName_1, "\"."));
-                            var mappedSampled = samplesReceived.map(function (sample) {
-                                var sum = sample.data.reduce(function (a, b) { return a + b; }, 0);
-                                return {
-                                    data: sample.data,
-                                    sampled_at: new Date(sample.time * 1000),
-                                    device: deviceName_1,
-                                    db: Math.abs(((sum / sample.data.length) % 100) + 20)
-                                };
+                            samples.insertOne({
+                                data: msg.data,
+                                sampled_at: new Date(msg.sent_at * 1000),
+                                device: deviceName,
+                                db: 0
                             });
-                            samples.insertMany(mappedSampled);
                             devices.updateOne({
-                                name: deviceName_1
+                                name: deviceName
                             }, {
                                 $set: {
                                     ping: {
@@ -128,7 +122,7 @@ function main() {
                             });
                         }
                         catch (e) {
-                            console.log("unable to interpret message");
+                            console.log("unable to interpret message, " + e);
                         }
                     });
                     return [2 /*return*/];
