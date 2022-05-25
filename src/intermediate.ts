@@ -75,7 +75,7 @@ async function main() {
       let delay = Math.abs((receivedAt.getTime() - sentAt.getTime()) / 1000);
 
       samples.insertOne({
-        data: msg.data,
+        bands: msg.data.bands,
         sampled_at: new Date(msg.sent_at * 1000),
         device: deviceName,
         db: 0,
