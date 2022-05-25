@@ -79,17 +79,12 @@ async function main() {
         `Received ${samplesReceived.length} samples from "${deviceName}".`
       );
 
-      let mappedSampled = samplesReceived.map((sample) => {
-        let sum = sample.data.reduce((a: number, b: number) => a + b, 0);
-        return {
-          data: sample.data,
-          sampled_at: new Date(sample.time * 1000),
-          device: deviceName,
-          db: Math.abs(((sum / sample.data.length) % 100) + 20),
-        };
+      samples.insertOne({
+        data: msg.data,
+        sampled_at: new Date(msg.sent_at * 1000),
+        device: deviceName,
+        db: 0,
       });
-
-      samples.insertMany(mappedSampled);
 
       devices.updateOne(
         {
